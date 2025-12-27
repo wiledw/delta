@@ -66,6 +66,10 @@ export function SignUpForm({
         provider: "google",
         options: {
           redirectTo: `${getSiteUrl()}/auth/callback`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
         },
       });
       if (error) throw error;

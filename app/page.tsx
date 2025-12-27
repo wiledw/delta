@@ -5,6 +5,8 @@ import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import {
   BarChart3,
   Zap,
@@ -18,7 +20,33 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-export default function Home() {
+interface HomeProps {
+  searchParams: Promise<{ code?: string; error?: string }>;
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const params = await searchParams;
+  
+  // Handle OAuth callback if code is present in URL (fallback)
+  // This happens if Supabase redirects to home instead of /auth/callback
+  if (params.code) {
+    redirect(`/auth/callback?code=${params.code}`);
+  }
+
+  // Handle OAuth errors
+  if (params.error) {
+    redirect(`/auth/error?error=${encodeURIComponent(params.error)}`);
+  }
+
+  // Check if user is logged in
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // If user is logged in and on home page, redirect to dashboard
+  if (user) {
+    redirect("/dashboard");
+  }
+
   return (
     <main className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="flex-1 w-full flex flex-col items-center">
