@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,8 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { AnalysisResult } from "@/lib/pair-trading-math";
 import { getFOILSBadgeVariant } from "@/lib/foils-indicator";
+import { RefreshCw } from "lucide-react";
+import { zScore } from "@/lib/pair-trading-math";
 
 interface AnalysisViewProps {
   result: AnalysisResult;
@@ -17,6 +21,47 @@ interface AnalysisViewProps {
 }
 
 export function AnalysisView({ result, inputs }: AnalysisViewProps) {
+  const [currentPriceA, setCurrentPriceA] = useState<number | null>(null);
+  const [currentPriceB, setCurrentPriceB] = useState<number | null>(null);
+  const [isFetchingPrices, setIsFetchingPrices] = useState(false);
+  const [updatedSpread, setUpdatedSpread] = useState<number | null>(null);
+  const [updatedZScore, setUpdatedZScore] = useState<number | null>(null);
+
+  const handleRecalculateSpread = async () => {
+    setIsFetchingPrices(true);
+    try {
+      // Fetch current prices for both assets
+      const [responseA, responseB] = await Promise.all([
+        fetch(`/api/crypto/price?symbol=${encodeURIComponent(inputs.assetA.toLowerCase())}`),
+        fetch(`/api/crypto/price?symbol=${encodeURIComponent(inputs.assetB.toLowerCase())}`),
+      ]);
+
+      const dataA = await responseA.json();
+      const dataB = await responseB.json();
+
+      if (responseA.ok && dataA.price && responseB.ok && dataB.price) {
+        const priceA = dataA.price;
+        const priceB = dataB.price;
+        
+        setCurrentPriceA(priceA);
+        setCurrentPriceB(priceB);
+
+        // Recalculate spread and Z-score using current prices
+        // Keep the original spread mean and stdev from the saved analysis
+        const spreadNow = priceA - result.stats.beta * priceB;
+        const zScoreNow = zScore(spreadNow, result.stats.spreadMean, result.stats.spreadStdev);
+        
+        setUpdatedSpread(spreadNow);
+        setUpdatedZScore(zScoreNow);
+      } else {
+        alert(`Failed to fetch prices: ${dataA.error || dataB.error || "Unknown error"}`);
+      }
+    } catch (err) {
+      alert(`Error fetching prices: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setIsFetchingPrices(false);
+    }
+  };
   return (
     <div className="space-y-4">
       {/* Quick Analysis Summary */}
@@ -27,8 +72,17 @@ export function AnalysisView({ result, inputs }: AnalysisViewProps) {
         <CardContent className="space-y-3">
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <div className="text-xs text-muted-foreground">Z-Score</div>
-              <div className="text-lg font-bold">{result.stats.zScoreNow.toFixed(2)}</div>
+              <div className="text-xs text-muted-foreground">
+                {updatedZScore !== null ? "Current Z-Score" : "Z-Score"}
+              </div>
+              <div className="text-lg font-bold">
+                {updatedZScore !== null ? updatedZScore.toFixed(2) : result.stats.zScoreNow.toFixed(2)}
+              </div>
+              {updatedZScore !== null && (
+                <div className="text-xs text-muted-foreground italic">
+                  Original: {result.stats.zScoreNow.toFixed(2)}
+                </div>
+              )}
             </div>
             <div>
               <div className="text-xs text-muted-foreground">Signal</div>
@@ -128,11 +182,55 @@ export function AnalysisView({ result, inputs }: AnalysisViewProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Recalculate Spread Button */}
+          <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div>
+              <div className="text-sm font-medium">Check Current Spread</div>
+              <div className="text-xs text-muted-foreground">
+                Fetch latest prices and recalculate spread to see if it's time to exit
+              </div>
+            </div>
+            <Button
+              onClick={handleRecalculateSpread}
+              disabled={isFetchingPrices}
+              variant="outline"
+              size="sm"
+            >
+              {isFetchingPrices ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Fetching...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Recalculate Spread
+                </>
+              )}
+            </Button>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="p-3 bg-white dark:bg-gray-900 rounded border">
-              <div className="text-xs text-muted-foreground mb-1">Current Spread</div>
-              <div className="text-xl font-bold">{result.stats.spreadNow.toFixed(2)}</div>
-              <div className="text-xs text-muted-foreground mt-1">Z: {result.stats.zScoreNow.toFixed(2)}</div>
+              <div className="text-xs text-muted-foreground mb-1">
+                {updatedSpread !== null ? "Updated Spread" : "Original Spread"}
+              </div>
+              <div className="text-xl font-bold">
+                {updatedSpread !== null ? updatedSpread.toFixed(2) : result.stats.spreadNow.toFixed(2)}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Z: {updatedZScore !== null ? updatedZScore.toFixed(2) : result.stats.zScoreNow.toFixed(2)}
+              </div>
+              {updatedSpread !== null && (
+                <div className="text-xs text-muted-foreground mt-1 italic">
+                  Original: {result.stats.spreadNow.toFixed(2)} (Z: {result.stats.zScoreNow.toFixed(2)})
+                </div>
+              )}
+              {currentPriceA !== null && currentPriceB !== null && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  Prices: {inputs.assetA} ${currentPriceA.toFixed(2)}, {inputs.assetB} ${currentPriceB.toFixed(2)}
+                </div>
+              )}
             </div>
             <div className="p-3 bg-white dark:bg-gray-900 rounded border">
               <div className="text-xs text-muted-foreground mb-1">Target Spread</div>
@@ -144,17 +242,38 @@ export function AnalysisView({ result, inputs }: AnalysisViewProps) {
           <div className="space-y-2 text-sm">
             <div className="p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded">
               <strong>✅ Close for profit:</strong> When spread reaches {result.stats.spreadMean.toFixed(2)} (Z-score = {result.inputs.exitZ})
+              {updatedZScore !== null && (() => {
+                const currentZAbs = Math.abs(updatedZScore);
+                const exitZAbs = Math.abs(result.inputs.exitZ);
+                const tolerance = 0.1; // Consider "ready" if within 0.1 of exit Z
+                const isReady = currentZAbs <= exitZAbs || (currentZAbs - exitZAbs) <= tolerance;
+                const status = isReady 
+                  ? "✅ Ready to close!" 
+                  : currentZAbs < exitZAbs + 0.5
+                  ? "⏳ Almost there..."
+                  : "⏸️ Still waiting...";
+                return (
+                  <div className="text-xs mt-1">
+                    Current Z: {updatedZScore.toFixed(2)} - {status}
+                  </div>
+                );
+              })()}
             </div>
             <div className="p-2 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded">
               <strong>⏰ Time limit:</strong> After {result.inputs.maxHoldingDays} days or when airdrop requirements met
             </div>
             <div className="p-2 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded">
               <strong>🚨 Emergency exit:</strong> If spread reaches{" "}
-              {result.signal.tradeSignal === "SHORT_A_LONG_B" || 
-               (result.signal.tradeSignal === "NO_SIGNAL" && result.stats.zScoreNow >= 0)
-                ? (result.stats.spreadNow + result.riskPlan.stopLossSpreadDistance).toFixed(2)
-                : (result.stats.spreadNow - result.riskPlan.stopLossSpreadDistance).toFixed(2)}
-              {" "}(current: {result.stats.spreadNow.toFixed(2)})
+              {(() => {
+                const currentSpread = updatedSpread !== null ? updatedSpread : result.stats.spreadNow;
+                const currentZ = updatedZScore !== null ? updatedZScore : result.stats.zScoreNow;
+                const stopLossLevel = result.signal.tradeSignal === "SHORT_A_LONG_B" || 
+                  (result.signal.tradeSignal === "NO_SIGNAL" && currentZ >= 0)
+                  ? currentSpread + result.riskPlan.stopLossSpreadDistance
+                  : currentSpread - result.riskPlan.stopLossSpreadDistance;
+                return stopLossLevel.toFixed(2);
+              })()}
+              {" "}(current: {(updatedSpread !== null ? updatedSpread : result.stats.spreadNow).toFixed(2)})
             </div>
           </div>
 

@@ -1,109 +1,183 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# PairLab - Delta-Neutral Pair Trading Analytics
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
-
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+A Next.js 14+ app for analyzing crypto pairs and calculating delta-neutral positions for airdrop farming on perpetual DEXes.
 
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+- **Delta-Neutral Position Calculator**: Calculate optimal position sizes for long/short pairs (e.g., BTC short + ETH long)
+- **Spread Analysis**: Z-score, correlation, beta calculations for pair trading
+- **Live Price Data**: Fetch current prices and historical data from CoinGecko API (free tier)
+- **Multiple Timeframes**: Hourly, Daily, or Weekly analysis
+- **FOILS Indicator**: Market sentiment analysis (Funding, Open Interest, Long/Short Ratio)
+- **Risk Management**: Stop loss, take profit, and exit rules based on spread levels
+- **Save & Review**: Save analyses and review them later (requires login)
+- **Airdrop Farming Focus**: Optimized for maintaining delta-neutral positions while farming airdrops
 
-## Demo
+## Quick Start
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+### 1. Prerequisites
 
-## Deploy to Vercel
+- Node.js 18+ 
+- Supabase account (free tier works)
+- CoinGecko API key (optional, free tier available)
 
-Vercel deployment will guide you through creating a Supabase account and project.
+### 2. Installation
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd delta
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+# Install dependencies
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+### 3. Environment Setup
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+Create a `.env.local` file in the root directory:
 
-## Clone and run locally
+```env
+# Supabase (required)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+# CoinGecko API (optional - works without it, but rate limits apply)
+NEXT_PUBLIC_COINGECKO_API_KEY=your_coingecko_api_key
+```
 
-2. Create a Next.js app using the Supabase Starter template npx command
+Get your Supabase credentials from [your Supabase project settings](https://supabase.com/dashboard/project/_/settings/api)
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+Get a CoinGecko API key from [CoinGecko API](https://www.coingecko.com/en/api) (free tier: 30 calls/min)
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+### 4. Database Setup
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+Run the Supabase migration to create the analyses table:
 
-3. Use `cd` to change into the app's directory
+```bash
+# Using Supabase CLI (recommended)
+supabase db push
 
-   ```bash
-   cd with-supabase-app
-   ```
+# Or manually run the SQL in supabase/migrations/001_create_analyses_table.sql
+# via the Supabase dashboard SQL editor
+```
 
-4. Rename `.env.example` to `.env.local` and update the following:
+See `MIGRATION_GUIDE.md` for detailed instructions.
 
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+### 5. Run the App
 
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+```
 
-5. You can now run the Next.js local development server:
+Open [http://localhost:3000](http://localhost:3000)
 
-   ```bash
-   npm run dev
-   ```
+## How to Use
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+### Basic Workflow
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+1. **Enter Asset Symbols**: Input CoinGecko symbols (e.g., `btc`, `eth`, `sol`)
+2. **Fetch Live Prices**: Click "Fetch Live Prices" to get current market prices
+3. **Select Timeframe**: Choose Hourly, Daily, or Weekly from the dropdown
+4. **Fetch Historical Data**: Click "Fetch 30 Days" or "Fetch 90 Days" to get price history
+5. **Configure Parameters**: Set portfolio size, risk %, leverage cap, etc.
+6. **Run Analysis**: Click "Run Analysis" to calculate positions
+7. **Open Positions**: Use the calculated positions to open trades on your perp DEX
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+### Understanding the Results
 
-## Feedback and issues
+**Analysis Summary:**
+- **Z-Score**: How far the spread is from its mean (higher = more deviation)
+- **Signal**: SHORT A / LONG B or LONG A / SHORT B (or NO SIGNAL)
+- **Correlation**: How closely the assets move together (0.7+ is good for pairs)
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+**Positions to Open:**
+- Two positions shown: Asset A and Asset B
+- Each shows: Direction (LONG/SHORT), Size (USD), Units, Leverage
+- Use the same leverage for both positions on your DEX
 
-## More Supabase examples
+**When to Close:**
+- **Close for profit**: When spread reaches target (returns to mean)
+- **Time limit**: After max holding days or when airdrop requirements met
+- **Emergency exit**: If spread moves too far against you (stop loss)
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+### Timeframes
+
+- **Hourly**: For very short-term trades (hours to days) - fetches 1 day of hourly data
+- **Daily**: For short to medium-term trades (days to weeks) - fetches 30-90 days
+- **Weekly**: For longer-term analysis - fetches up to 365 days, filtered to weekly
+
+**Recommended for airdrop farming**: Daily timeframe with 90 days of data
+
+### Key Concepts
+
+**Spread**: The difference between Asset A price and (Beta × Asset B price). This is what you're trading, not individual prices.
+
+**Delta-Neutral**: Positions hedge each other - if both assets move together, you break even. You profit from relative outperformance.
+
+**Beta**: Measures how much Asset A moves relative to Asset B. Used to size positions correctly.
+
+**Z-Score**: Standardized measure of how far the spread is from its historical mean. Higher Z-score = stronger signal.
+
+## API Rate Limits
+
+**CoinGecko Free Tier:**
+- Without API key: ~10-50 calls/minute (varies)
+- With API key: 30 calls/minute
+- Historical data: Cached for 5 minutes to reduce calls
+
+**Binance Futures** (for real FOILS data - optional):
+- 1200 requests per minute
+- See `API_RATE_LIMITS.md` for details
+
+## Project Structure
+
+```
+delta/
+├── app/
+│   ├── api/crypto/          # API routes for crypto data
+│   ├── dashboard/           # Main calculator page
+│   └── analysis/[id]/       # View saved analysis
+├── components/
+│   ├── dashboard-client.tsx # Main calculator UI
+│   ├── analysis-view.tsx    # Saved analysis viewer
+│   └── ui/                  # shadcn/ui components
+├── lib/
+│   ├── pair-trading-math.ts # Core calculations
+│   ├── crypto-api.ts        # CoinGecko integration
+│   ├── foils-indicator.ts   # FOILS calculation
+│   └── foils-real-data.ts   # Binance FOILS (optional)
+└── supabase/
+    └── migrations/          # Database migrations
+```
+
+## Tech Stack
+
+- **Next.js 14+** (App Router)
+- **Supabase** (Auth, Database, RLS)
+- **Tailwind CSS** (Styling)
+- **shadcn/ui** (UI Components)
+- **CoinGecko API** (Price data)
+- **TypeScript** (Type safety)
+
+## Documentation
+
+- `MIGRATION_GUIDE.md` - Database setup instructions
+- `FEATURES.md` - Detailed feature list
+- `API_RATE_LIMITS.md` - API rate limit information
+- `ENV_SETUP.md` - Environment variable setup
+
+## License
+
+MIT
+
+## Support
+
+For issues or questions, please open an issue on GitHub.

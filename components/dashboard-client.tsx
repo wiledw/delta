@@ -31,7 +31,19 @@ import {
 import { User } from "@supabase/supabase-js";
 import { SavedAnalysesList } from "./saved-analyses-list";
 import { calculateFOILS, getFOILSBadgeVariant } from "@/lib/foils-indicator";
-import { Download, RefreshCw } from "lucide-react";
+import {
+  Download,
+  RefreshCw,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  BarChart3,
+  Zap,
+  Shield,
+  Target,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
 
 interface DashboardClientProps {
   user: User | null;
@@ -64,7 +76,15 @@ export function DashboardClient({ user }: DashboardClientProps) {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [savedAnalyses, setSavedAnalyses] = useState<any[]>([]);
+  const [savedAnalyses, setSavedAnalyses] = useState<
+    Array<{
+      id: string;
+      asset_a: string;
+      asset_b: string;
+      created_at: string;
+      result_data: AnalysisResult;
+    }>
+  >([]);
   const [isLoadingAnalyses, setIsLoadingAnalyses] = useState(false);
   const [isFetchingPriceA, setIsFetchingPriceA] = useState(false);
   const [isFetchingPriceB, setIsFetchingPriceB] = useState(false);
@@ -349,29 +369,40 @@ export function DashboardClient({ user }: DashboardClientProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* Header */}
-      <header className="border-b">
+      <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-xl font-bold">
+            <Link
+              href="/"
+              className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+            >
               PairLab
             </Link>
+            <Badge variant="outline" className="hidden sm:flex">
+              <Activity className="h-3 w-3 mr-1" />
+              Delta-Neutral Trading
+            </Badge>
           </div>
           <div className="flex items-center gap-4">
             {currentUser ? (
               <>
-                <span className="text-sm text-muted-foreground">
+                <Badge variant="secondary" className="hidden sm:flex">
                   {currentUser.email}
-                </span>
+                </Badge>
                 <LogoutButton />
               </>
             ) : (
               <>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground hidden sm:block">
                   Sign in to save and view history
                 </span>
-                <Button asChild size="sm" variant="outline">
+                <Button
+                  asChild
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                >
                   <Link href="/auth/login">Sign in</Link>
                 </Button>
               </>
@@ -384,42 +415,84 @@ export function DashboardClient({ user }: DashboardClientProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Inputs */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Quick Start Info Card */}
-            <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+            {/* Quick Start Info Card - Web3 Style */}
+            <Card className="bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-500/20 dark:via-purple-500/20 dark:to-pink-500/20 border-2 border-blue-300 dark:border-blue-700">
               <CardHeader>
-                <CardTitle className="text-lg">Quick Start Guide</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  <CardTitle className="text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Quick Start Guide
+                  </CardTitle>
+                </div>
                 <CardDescription>
                   Get started quickly with live market data
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p>
-                  <strong>1. Enter symbols:</strong> Use CoinGecko symbols
-                  (e.g., btc, eth, sol, xrp)
-                </p>
-                <p>
-                  <strong>2. Fetch live prices:</strong> Click "Fetch Live
-                  Prices" to get current market prices
-                </p>
-                <p>
-                  <strong>3. Fetch historical data:</strong> Click "Fetch 30
-                  Days" or "Fetch 90 Days" to get price history automatically
-                </p>
-                <p>
-                  <strong>4. Run analysis:</strong> Click "Run Analysis" to
-                  calculate spread, Z-score, and position sizing
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  All data is fetched from CoinGecko free API (no API key
-                  required). Rate limit: ~10-50 calls/minute.
-                </p>
+              <CardContent className="space-y-3 text-sm">
+                <div className="flex items-start gap-3 p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                  <Badge variant="outline" className="mt-0.5">
+                    1
+                  </Badge>
+                  <div>
+                    <strong className="text-blue-700 dark:text-blue-300">
+                      Enter symbols:
+                    </strong>{" "}
+                    Use CoinGecko symbols (e.g., btc, eth, sol, xrp)
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                  <Badge variant="outline" className="mt-0.5">
+                    2
+                  </Badge>
+                  <div>
+                    <strong className="text-purple-700 dark:text-purple-300">
+                      Fetch live prices:
+                    </strong>{" "}
+                    Click &quot;Fetch Live Prices&quot; to get current market
+                    prices
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                  <Badge variant="outline" className="mt-0.5">
+                    3
+                  </Badge>
+                  <div>
+                    <strong className="text-pink-700 dark:text-pink-300">
+                      Fetch historical data:
+                    </strong>{" "}
+                    Click &quot;Fetch 30 Days&quot; or &quot;Fetch 90 Days&quot;
+                    to get price history automatically
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                  <Badge variant="outline" className="mt-0.5">
+                    4
+                  </Badge>
+                  <div>
+                    <strong className="text-green-700 dark:text-green-300">
+                      Run analysis:
+                    </strong>{" "}
+                    Click &quot;Run Analysis&quot; to calculate spread, Z-score,
+                    and position sizing
+                  </div>
+                </div>
+                <div className="p-2 bg-blue-500/10 dark:bg-blue-500/20 border border-blue-300 dark:border-blue-700 rounded-lg mt-3">
+                  <p className="text-xs text-muted-foreground">
+                    <Activity className="h-3 w-3 inline mr-1" />
+                    All data is fetched from CoinGecko free API (no API key
+                    required). Rate limit: ~10-50 calls/minute.
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
             {/* Pair Selector */}
-            <Card>
+            <Card className="border-2 border-slate-200 dark:border-slate-800">
               <CardHeader>
-                <CardTitle>Pair Selector</CardTitle>
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                  <CardTitle>Pair Selector</CardTitle>
+                </div>
                 <CardDescription>
                   Enter the symbols for the two assets you want to analyze
                 </CardDescription>
@@ -475,9 +548,12 @@ export function DashboardClient({ user }: DashboardClientProps) {
             </Card>
 
             {/* Inputs Panel */}
-            <Card>
+            <Card className="border-2 border-slate-200 dark:border-slate-800">
               <CardHeader>
-                <CardTitle>Analysis Parameters</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                  <CardTitle>Analysis Parameters</CardTitle>
+                </div>
                 <CardDescription>
                   Configure prices, historical data, and risk parameters
                 </CardDescription>
@@ -907,31 +983,71 @@ export function DashboardClient({ user }: DashboardClientProps) {
             {/* Results Panel */}
             {result && (
               <div className="space-y-4">
-                {/* Quick Analysis Summary */}
-                <Card>
+                {/* Quick Analysis Summary - Web3 Style */}
+                <Card className="border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-950/50 dark:to-purple-950/50">
                   <CardHeader>
-                    <CardTitle>Analysis Summary</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      <CardTitle className="text-xl">
+                        Analysis Summary
+                      </CardTitle>
+                    </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <div className="text-xs text-muted-foreground">
-                          Z-Score
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Z-Score Card */}
+                      <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Z-Score
+                          </div>
+                          {Math.abs(result.stats.zScoreNow) >= 2 ? (
+                            <Zap className="h-4 w-4 text-yellow-500" />
+                          ) : (
+                            <Activity className="h-4 w-4 text-blue-500" />
+                          )}
                         </div>
-                        <div className="text-lg font-bold">
+                        <div
+                          className={`text-3xl font-bold ${
+                            Math.abs(result.stats.zScoreNow) >= 2
+                              ? "text-yellow-600 dark:text-yellow-400"
+                              : Math.abs(result.stats.zScoreNow) >= 1
+                              ? "text-orange-600 dark:text-orange-400"
+                              : "text-blue-600 dark:text-blue-400"
+                          }`}
+                        >
                           {result.stats.zScoreNow.toFixed(2)}
                         </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {Math.abs(result.stats.zScoreNow) >= 2
+                            ? "Strong Signal"
+                            : Math.abs(result.stats.zScoreNow) >= 1
+                            ? "Moderate Signal"
+                            : "Weak Signal"}
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground">
-                          Signal
+
+                      {/* Signal Card */}
+                      <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-purple-200 dark:border-purple-800 shadow-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Trade Signal
+                          </div>
+                          {result.signal.tradeSignal !== "NO_SIGNAL" ? (
+                            <TrendingUp className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-gray-500" />
+                          )}
                         </div>
                         <Badge
                           variant={
                             result.signal.tradeSignal === "NO_SIGNAL"
                               ? "secondary"
+                              : result.signal.tradeSignal === "SHORT_A_LONG_B"
+                              ? "destructive"
                               : "default"
                           }
+                          className="text-sm px-3 py-1.5 font-semibold"
                         >
                           {result.signal.tradeSignal === "SHORT_A_LONG_B"
                             ? "SHORT A / LONG B"
@@ -939,52 +1055,99 @@ export function DashboardClient({ user }: DashboardClientProps) {
                             ? "LONG A / SHORT B"
                             : "NO SIGNAL"}
                         </Badge>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground">
-                          Correlation
+                        <div className="text-xs text-muted-foreground mt-2">
+                          {result.signal.confidenceNote}
                         </div>
-                        <div className="text-lg font-bold">
+                      </div>
+
+                      {/* Correlation Card */}
+                      <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border border-green-200 dark:border-green-800 shadow-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                            Correlation
+                          </div>
+                          <Shield
+                            className={`h-4 w-4 ${
+                              result.stats.correlation >= 0.7
+                                ? "text-green-500"
+                                : "text-yellow-500"
+                            }`}
+                          />
+                        </div>
+                        <div
+                          className={`text-3xl font-bold ${
+                            result.stats.correlation >= 0.7
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-yellow-600 dark:text-yellow-400"
+                          }`}
+                        >
                           {(result.stats.correlation * 100).toFixed(0)}%
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {result.stats.correlation >= 0.7
+                            ? "Strong Pair"
+                            : "Moderate Pair"}
                         </div>
                       </div>
                     </div>
+
+                    {/* FOILS Indicator */}
                     {result.foils && (
-                      <div className="pt-2 border-t">
-                        <div className="text-xs text-muted-foreground mb-1">
-                          Market Sentiment (FOILS)
+                      <div className="pt-4 border-t border-blue-200 dark:border-blue-800">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Zap className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                          <div className="text-sm font-semibold">
+                            Market Sentiment (FOILS)
+                          </div>
                         </div>
                         <Badge
                           variant={getFOILSBadgeVariant(result.foils.overall)}
+                          className="text-base px-4 py-2"
                         >
                           {result.foils.overall}
                         </Badge>
+                        <div className="text-xs text-muted-foreground mt-2">
+                          Confidence: {result.foils.confidence}%
+                        </div>
                       </div>
                     )}
                   </CardContent>
                 </Card>
 
                 {/* Positions Card */}
-                {/* Positions to Open */}
+                {/* Positions to Open - Web3 Style */}
                 {result.positions && (
-                  <Card>
+                  <Card className="border-2 border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-950/50 dark:to-pink-950/50">
                     <CardHeader>
-                      <CardTitle>Open These Positions on Perp DEX</CardTitle>
-                      <CardDescription>
+                      <div className="flex items-center gap-2">
+                        <Target className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        <CardTitle className="text-xl">
+                          Open These Positions on Perp DEX
+                        </CardTitle>
+                      </div>
+                      <CardDescription className="flex items-center gap-2 mt-2">
+                        <Shield className="h-4 w-4" />
                         Delta-neutral pair: Hold both positions together
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Asset A Position */}
-                        <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-2 border-blue-300 dark:border-blue-700 rounded-lg">
-                          <div className="text-lg font-bold mb-3">
-                            {result.inputs.assetA}
+                        <div className="p-5 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 dark:from-blue-500/20 dark:to-indigo-500/20 border-2 border-blue-400/50 dark:border-blue-600/50 rounded-xl backdrop-blur-sm shadow-lg">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                              {result.inputs.assetA}
+                            </div>
+                            {result.positions.assetA.direction === "long" ? (
+                              <TrendingUp className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <TrendingDown className="h-5 w-5 text-red-500" />
+                            )}
                           </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
-                                Direction:
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                              <span className="text-sm font-medium text-muted-foreground">
+                                Direction
                               </span>
                               <Badge
                                 variant={
@@ -992,51 +1155,67 @@ export function DashboardClient({ user }: DashboardClientProps) {
                                     ? "default"
                                     : "destructive"
                                 }
-                                className="text-base px-3 py-1"
+                                className="text-sm px-3 py-1 font-semibold"
                               >
                                 {result.positions.assetA.direction.toUpperCase()}
                               </Badge>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
-                                Size (USD):
+                            <div className="flex items-center justify-between p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                              <span className="text-sm font-medium text-muted-foreground">
+                                Size (USD)
                               </span>
-                              <span className="text-lg font-bold">
+                              <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
                                 $
-                                {result.positions.assetA.usdNotional.toFixed(2)}
+                                {result.positions.assetA.usdNotional.toLocaleString(
+                                  undefined,
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  }
+                                )}
                               </span>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
-                                Units:
+                            <div className="flex items-center justify-between p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                              <span className="text-sm font-medium text-muted-foreground">
+                                Units
                               </span>
-                              <span className="text-lg font-semibold">
+                              <span className="text-lg font-semibold font-mono">
                                 {result.positions.assetA.units.toFixed(6)}
                               </span>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
-                                Leverage:
+                            <div className="flex items-center justify-between p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                              <span className="text-sm font-medium text-muted-foreground">
+                                Leverage
                               </span>
-                              <span className="text-base font-semibold">
+                              <Badge
+                                variant="outline"
+                                className="text-base px-3 py-1 font-bold"
+                              >
                                 {Math.round(
                                   result.positions.suggestedLeverageX
                                 )}
                                 x
-                              </span>
+                              </Badge>
                             </div>
                           </div>
                         </div>
 
                         {/* Asset B Position */}
-                        <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 border-2 border-green-300 dark:border-green-700 rounded-lg">
-                          <div className="text-lg font-bold mb-3">
-                            {result.inputs.assetB}
+                        <div className="p-5 bg-gradient-to-br from-green-500/10 to-emerald-500/10 dark:from-green-500/20 dark:to-emerald-500/20 border-2 border-green-400/50 dark:border-green-600/50 rounded-xl backdrop-blur-sm shadow-lg">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                              {result.inputs.assetB}
+                            </div>
+                            {result.positions.assetB.direction === "long" ? (
+                              <TrendingUp className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <TrendingDown className="h-5 w-5 text-red-500" />
+                            )}
                           </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
-                                Direction:
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                              <span className="text-sm font-medium text-muted-foreground">
+                                Direction
                               </span>
                               <Badge
                                 variant={
@@ -1044,38 +1223,47 @@ export function DashboardClient({ user }: DashboardClientProps) {
                                     ? "default"
                                     : "destructive"
                                 }
-                                className="text-base px-3 py-1"
+                                className="text-sm px-3 py-1 font-semibold"
                               >
                                 {result.positions.assetB.direction.toUpperCase()}
                               </Badge>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
-                                Size (USD):
+                            <div className="flex items-center justify-between p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                              <span className="text-sm font-medium text-muted-foreground">
+                                Size (USD)
                               </span>
-                              <span className="text-lg font-bold">
+                              <span className="text-xl font-bold text-green-600 dark:text-green-400">
                                 $
-                                {result.positions.assetB.usdNotional.toFixed(2)}
+                                {result.positions.assetB.usdNotional.toLocaleString(
+                                  undefined,
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  }
+                                )}
                               </span>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
-                                Units:
+                            <div className="flex items-center justify-between p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                              <span className="text-sm font-medium text-muted-foreground">
+                                Units
                               </span>
-                              <span className="text-lg font-semibold">
+                              <span className="text-lg font-semibold font-mono">
                                 {result.positions.assetB.units.toFixed(6)}
                               </span>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
-                                Leverage:
+                            <div className="flex items-center justify-between p-2 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                              <span className="text-sm font-medium text-muted-foreground">
+                                Leverage
                               </span>
-                              <span className="text-base font-semibold">
+                              <Badge
+                                variant="outline"
+                                className="text-base px-3 py-1 font-bold"
+                              >
                                 {Math.round(
                                   result.positions.suggestedLeverageX
                                 )}
                                 x
-                              </span>
+                              </Badge>
                             </div>
                           </div>
                         </div>
@@ -1084,72 +1272,129 @@ export function DashboardClient({ user }: DashboardClientProps) {
                   </Card>
                 )}
 
-                {/* When to Close */}
-                <Card>
+                {/* When to Close - Web3 Style */}
+                <Card className="border-2 border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50/50 to-red-50/50 dark:from-orange-950/50 dark:to-red-950/50">
                   <CardHeader>
-                    <CardTitle>When to Close Positions</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                      <CardTitle className="text-xl">
+                        When to Close Positions
+                      </CardTitle>
+                    </div>
                     <CardDescription>
                       Exit both positions together based on spread levels
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="p-3 bg-white dark:bg-gray-900 rounded border">
-                        <div className="text-xs text-muted-foreground mb-1">
-                          Current Spread
+                      <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border-2 border-blue-300 dark:border-blue-700 shadow-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Activity className="h-4 w-4 text-blue-500" />
+                          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            Current Spread
+                          </div>
                         </div>
-                        <div className="text-xl font-bold">
-                          {result.stats.spreadNow.toFixed(2)}
+                        <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                          {result.stats.spreadNow.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Z: {result.stats.zScoreNow.toFixed(2)}
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            Z: {result.stats.zScoreNow.toFixed(2)}
+                          </Badge>
                         </div>
                       </div>
-                      <div className="p-3 bg-white dark:bg-gray-900 rounded border">
-                        <div className="text-xs text-muted-foreground mb-1">
-                          Target Spread
+                      <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border-2 border-green-300 dark:border-green-700 shadow-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Target className="h-4 w-4 text-green-500" />
+                          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            Target Spread
+                          </div>
                         </div>
-                        <div className="text-xl font-bold text-green-600 dark:text-green-400">
-                          {result.stats.spreadMean.toFixed(2)}
+                        <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
+                          {result.stats.spreadMean.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Z: {result.inputs.exitZ}
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            Z: {result.inputs.exitZ}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 dark:from-green-500/20 dark:to-emerald-500/20 border-2 border-green-300 dark:border-green-700 rounded-xl">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                          <strong className="text-green-700 dark:text-green-300">
+                            Close for profit
+                          </strong>
+                        </div>
+                        <div className="text-sm text-green-800 dark:text-green-200">
+                          When spread reaches{" "}
+                          <span className="font-bold">
+                            {result.stats.spreadMean.toFixed(2)}
+                          </span>{" "}
+                          (Z-score = {result.inputs.exitZ})
+                        </div>
+                      </div>
+                      <div className="p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 dark:from-yellow-500/20 dark:to-orange-500/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                          <strong className="text-yellow-700 dark:text-yellow-300">
+                            Time limit
+                          </strong>
+                        </div>
+                        <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                          After{" "}
+                          <span className="font-bold">
+                            {result.inputs.maxHoldingDays} days
+                          </span>{" "}
+                          or when airdrop requirements met
+                        </div>
+                      </div>
+                      <div className="p-4 bg-gradient-to-r from-red-500/10 to-pink-500/10 dark:from-red-500/20 dark:to-pink-500/20 border-2 border-red-300 dark:border-red-700 rounded-xl">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                          <strong className="text-red-700 dark:text-red-300">
+                            Emergency exit
+                          </strong>
+                        </div>
+                        <div className="text-sm text-red-800 dark:text-red-200">
+                          If spread reaches{" "}
+                          {result.signal.tradeSignal === "SHORT_A_LONG_B" ||
+                          (result.signal.tradeSignal === "NO_SIGNAL" &&
+                            result.stats.zScoreNow >= 0)
+                            ? (
+                                result.stats.spreadNow +
+                                result.riskPlan.stopLossSpreadDistance
+                              ).toFixed(2)
+                            : (
+                                result.stats.spreadNow -
+                                result.riskPlan.stopLossSpreadDistance
+                              ).toFixed(2)}{" "}
+                          (current: {result.stats.spreadNow.toFixed(2)})
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-2 text-sm">
-                      <div className="p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded">
-                        <strong>✅ Close for profit:</strong> When spread
-                        reaches {result.stats.spreadMean.toFixed(2)} (Z-score ={" "}
-                        {result.inputs.exitZ})
+                    <div className="p-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 border border-blue-300 dark:border-blue-700 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <Zap className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+                        <div className="text-xs text-muted-foreground">
+                          <strong className="text-blue-700 dark:text-blue-300">
+                            Pro Tip:
+                          </strong>{" "}
+                          Monitor spread daily. Exit both positions
+                          simultaneously. Goal is volume/trading activity with
+                          minimal profits from outperformance.
+                        </div>
                       </div>
-                      <div className="p-2 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded">
-                        <strong>⏰ Time limit:</strong> After{" "}
-                        {result.inputs.maxHoldingDays} days or when airdrop
-                        requirements met
-                      </div>
-                      <div className="p-2 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded">
-                        <strong>🚨 Emergency exit:</strong> If spread reaches{" "}
-                        {result.signal.tradeSignal === "SHORT_A_LONG_B" ||
-                        (result.signal.tradeSignal === "NO_SIGNAL" &&
-                          result.stats.zScoreNow >= 0)
-                          ? (
-                              result.stats.spreadNow +
-                              result.riskPlan.stopLossSpreadDistance
-                            ).toFixed(2)
-                          : (
-                              result.stats.spreadNow -
-                              result.riskPlan.stopLossSpreadDistance
-                            ).toFixed(2)}{" "}
-                        (current: {result.stats.spreadNow.toFixed(2)})
-                      </div>
-                    </div>
-
-                    <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
-                      💡 Monitor spread daily. Exit both positions
-                      simultaneously. Goal is volume/trading activity with
-                      minimal profits from outperformance.
                     </div>
                   </CardContent>
                 </Card>
