@@ -12,9 +12,18 @@ export const hasEnvVars =
 
 /**
  * Get the site URL for redirects and email links
- * Uses NEXT_PUBLIC_SITE_URL if set, otherwise falls back to VERCEL_URL or localhost
+ * Uses NEXT_PUBLIC_SITE_URL if set, otherwise falls back to window.location.origin (client) or localhost (server)
  */
 export function getSiteUrl(): string {
+  // Client-side: use NEXT_PUBLIC_SITE_URL or window.location.origin
+  if (typeof window !== "undefined") {
+    if (process.env.NEXT_PUBLIC_SITE_URL) {
+      return process.env.NEXT_PUBLIC_SITE_URL;
+    }
+    return window.location.origin;
+  }
+  
+  // Server-side: use NEXT_PUBLIC_SITE_URL, VERCEL_URL, or localhost
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL;
   }
