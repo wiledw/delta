@@ -4,15 +4,14 @@ import { AnalysisView } from "@/components/analysis-view";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
-
-// Mark this route as dynamic since it requires authentication and user-specific data
-export const dynamic = "force-dynamic";
+import { unstable_noStore } from "next/cache";
 
 interface AnalysisPageProps {
   params: Promise<{ id: string }>;
 }
 
 async function AnalysisContent({ id }: { id: string }) {
+  unstable_noStore(); // Prevent static generation - this route requires authentication
   const supabase = await createClient();
 
   // Check authentication
@@ -66,6 +65,7 @@ function AnalysisSkeleton() {
 }
 
 export default async function AnalysisPage({ params }: AnalysisPageProps) {
+  unstable_noStore(); // Mark this route as dynamic
   const { id } = await params;
 
   return (
